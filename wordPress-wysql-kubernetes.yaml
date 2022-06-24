@@ -1,27 +1,43 @@
 apiVersion: v1
-kind: Pod
+kind: Pods
 metadata:
-  name: two-containers
+  name: WordPress+MySQL
 spec:
-
-  restartPolicy: Never
-
+  restartPolicy: Always
   volumes:
-  - name: shared-data
+  - name: db_data
     emptyDir: {}
-
+  - name: wordpress_data
+    emptyDir: {}
   containers:
-
-  - name: nginx-container
-    image: nginx
+  - name: mysql
+    image: mysql:5.7
     volumeMounts:
-    - name: shared-data
-      mountPath: /usr/share/nginx/html
-
-  - name: debian-container
-    image: debian
+    - name: db_data
+      mountPath: /var/lib/mysql
+    env:
+    - name: MYSQL_ROOT_PASSWORD
+      value: "somewordpress"
+    - name: MYSQL_DATABASE
+      value: "wordpress"
+    - name: MYSQL_USER
+      value: "wordpress"
+    - name: MYSQL_PASSWORD
+      value: "wordpress"
+  - name: wordpress
+    image: wordpress:php8.1-fpm
     volumeMounts:
-    - name: shared-data
-      mountPath: /pod-data
-    command: ["/bin/sh"]
-    args: ["-c", "echo Hello from the debian container > /pod-data/index.html"]
+    - name: wordpress_data
+      mountPath: /var/www/html
+    ports:
+      port: 8087
+      targetPort: 80
+    env:
+    - name: WORDPRESS_DB_HOST
+      value: "db"
+    - name: WORDPRESS_DB_USER
+      value: "wordpress"
+    - name: WORDPRESS_DB_PASSWORD
+      value: "wordpress"
+    - name: WORDPRESS_DB_NAME
+      value: "wordpress"
